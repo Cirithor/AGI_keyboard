@@ -290,7 +290,12 @@ void keyPressed() {
   arrKeyPressed[keyboard.getOemKey()] = true;
   arrASCIIKeyPressed[keyboard.getKey()] = true;
 
-  printKey();
+  if (arrKeyPressed[USB_F1] == true && arrKeyPressedLast[USB_F1] == false) {
+    arrKeyPressedLast[USB_F1] = true;
+    ShowMemory();
+  }
+
+  printKey();                                              
 }
 
 // This function intercepts key release

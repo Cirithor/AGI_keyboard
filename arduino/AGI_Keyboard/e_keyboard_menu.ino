@@ -6,13 +6,14 @@ void KeyboardMenu() {
   const char* str[] = {
     /*1*/    "Tetris",
     /*2*/    "Game of Life",
-    /*3*/    "Breakout",
-    /*4*/    "Clock",
-    /*5*/    "Starfield",
-    /*6*/    "10Print",
-    /*7*/    //    "new",
+    /*3*/    "Snake",
+    /*4*/    "Breakout",
+    /*5*/    "Clock",
+    /*6*/    "Starfield",
+    /*7*/    "10Print",
     /*8*/    //    "new",
     /*9*/    //    "new",
+    /*10*/   //    "new",
   };
 
   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -151,19 +152,19 @@ void KeyboardMenu() {
           /*2*/          GOLMenu();
           break;
         case 3:
-          /*3*/          breakoutGame();
+          /*3*/          Snake();
           break;
         case 4:
-          /*4*/          Clock();
+          /*4*/          breakoutGame();
           break;
         case 5:
-          /*5*/          StarfieldUSB();
+          /*5*/          Clock();
           break;
         case 6:
-          /*6*/          TenPrintUSB();
+          /*6*/          StarfieldUSB();
           break;
         case 7:
-          /*7*/
+          /*7*/          TenPrintUSB();
           break;
         case 8:
           /*8*/
