@@ -19,6 +19,7 @@ const byte SNAKE_DIRECTION_RIGHT = 4;
 #define SNAKE_GAME_STATE_RUNNING 1
 #define SNAKE_GAME_STATE_END     2
 #define SNAKE_GAME_STATE_INIT    3
+#define SNAKE_GAME_STATE_PAUSED  4
 
 #define SNAKE_MAX_TAIL_LENGTH 100
 #define SNAKE_MIN_TAIL_LENGTH 3
@@ -41,7 +42,6 @@ unsigned int snakeWormLength = 0;
 int snakePointerField = 0;
 int snakePointerFood = 0;
 int snakeScore = 0;
-bool paused = false;
 
 void Snake() {
   snakeResetScreen(true);
@@ -62,6 +62,8 @@ void Snake() {
       case SNAKE_GAME_STATE_END:
         snakeCheckButtonPressed();
         break;
+      case SNAKE_GAME_STATE_PAUSED:
+        snakeCheckButtonPressed();
     }
     if (arrKeyPressed[USB_ESC] == true && arrKeyPressedLast[USB_ESC] == false) {
       arrKeyPressedLast[USB_ESC] = true;
@@ -124,52 +126,54 @@ unsigned long snakeGameDelay()
 
 void snakeUpdateGame()
 {
-  if ((millis() - snakeLastDrawUpdate) > snakeGameDelay() && !paused) {
-    snakeUserDirection = snakeUserDirectionBuffer;
-    switch (snakeUserDirection) {
-      case SNAKE_DIRECTION_RIGHT:
-        if (snakeHead.x >= 0) {
-          snakeHead.x++;
-        }
-        break;
-      case SNAKE_DIRECTION_LEFT:
-        if (snakeHead.x < SNAKE_X_MAX) {
-          snakeHead.x--;
-        }
-        break;
-      case SNAKE_DIRECTION_DOWN:
-        if (snakeHead.y > 0) {
-          snakeHead.y--;
-        }
-        break;
-      case SNAKE_DIRECTION_UP:
-        if (snakeHead.y < SNAKE_Y_MAX - 1) {
-          snakeHead.y++;
-        }
-        break;
-    }
-    //    Serial.print("HeadX: ");
-    //    Serial.print(snakeHead.x);
-    //    Serial.print(" HeadY: ");
-    //    Serial.print(snakeHead.y);
-    //    Serial.println();
-    if (snakeIsCollision() == true) {
-      snakeEndGame();
-      return;
-    }
-
-    snakeUpdateTail();
-
-    if (snakeHead.x == snakeFood.x && snakeHead.y == snakeFood.y) {
-      if (snakeWormLength < SNAKE_MAX_TAIL_LENGTH) {
-        snakeWormLength++;
+  if (millis() - snakeLastDrawUpdate <= snakeGameDelay()) return;
+  if (snakeGameState == SNAKE_GAME_STATE_PAUSED) return;
+  
+  snakeUserDirection = snakeUserDirectionBuffer;
+  switch (snakeUserDirection) {
+    case SNAKE_DIRECTION_RIGHT:
+      if (snakeHead.x >= 0) {
+        snakeHead.x++;
       }
-      snakeUpdateScore();
-      snakeUpdateFood();
-    }
-    snakeDraw(snakeHead.x, snakeHead.y, SNAKE_TYPE_SNAKE);
-    snakeLastDrawUpdate = millis();
+      break;
+    case SNAKE_DIRECTION_LEFT:
+      if (snakeHead.x < SNAKE_X_MAX) {
+        snakeHead.x--;
+      }
+      break;
+    case SNAKE_DIRECTION_DOWN:
+      if (snakeHead.y > 0) {
+        snakeHead.y--;
+      }
+      break;
+    case SNAKE_DIRECTION_UP:
+      if (snakeHead.y < SNAKE_Y_MAX - 1) {
+        snakeHead.y++;
+      }
+      break;
   }
+  //    Serial.print("HeadX: ");
+  //    Serial.print(snakeHead.x);
+  //    Serial.print(" HeadY: ");
+  //    Serial.print(snakeHead.y);
+  //    Serial.println();
+  if (snakeIsCollision() == true) {
+    snakeEndGame();
+    return;
+  }
+
+  snakeUpdateTail();
+
+  if (snakeHead.x == snakeFood.x && snakeHead.y == snakeFood.y) {
+    if (snakeWormLength < SNAKE_MAX_TAIL_LENGTH) {
+      snakeWormLength++;
+    }
+    snakeUpdateScore();
+    snakeUpdateFood();
+  }
+  snakeDraw(snakeHead.x, snakeHead.y, SNAKE_TYPE_SNAKE);
+  snakeLastDrawUpdate = millis();
+
 }
 
 void snakeEndGame()
@@ -237,41 +241,50 @@ bool snakeIsCollision()
 void snakeCheckButtonPressed()
 {
   usb.Task();
-  if (!paused) {
-    //update snake direction not allowing 180° turn
-    if (arrKeyPressed[USB_ARROWUP] == true && arrKeyPressedLast[USB_ARROWUP] == false) {
-      arrKeyPressedLast[USB_ARROWUP] = true;
-      if (snakeGameState == SNAKE_GAME_STATE_RUNNING && snakeUserDirection != SNAKE_DIRECTION_DOWN) {
-        snakeUserDirectionBuffer = SNAKE_DIRECTION_UP;
-      }
-    } else   if (arrKeyPressed[USB_ARROWDOWN] == true && arrKeyPressedLast[USB_ARROWDOWN] == false) {
-      arrKeyPressedLast[USB_ARROWUP] = true;
-      if (snakeGameState == SNAKE_GAME_STATE_RUNNING && snakeUserDirection != SNAKE_DIRECTION_UP) {
-        snakeUserDirectionBuffer = SNAKE_DIRECTION_DOWN;
-      }
-    } else   if (arrKeyPressed[USB_ARROWRIGHT] == true && arrKeyPressedLast[USB_ARROWRIGHT] == false) {
-      arrKeyPressedLast[USB_ARROWRIGHT] = true;
-      if (snakeGameState == SNAKE_GAME_STATE_RUNNING && snakeUserDirection != SNAKE_DIRECTION_LEFT) {
-        snakeUserDirectionBuffer = SNAKE_DIRECTION_RIGHT;
-      }
-    } else   if (arrKeyPressed[USB_ARROWLEFT] == true && arrKeyPressedLast[USB_ARROWLEFT] == false) {
-      arrKeyPressedLast[USB_ARROWLEFT] = true;
-      if (snakeGameState == SNAKE_GAME_STATE_RUNNING && snakeUserDirection != SNAKE_DIRECTION_RIGHT) {
-        snakeUserDirectionBuffer = SNAKE_DIRECTION_LEFT;
-      }
-    }
-  }
-
   if (arrKeyPressed[USB_ENTER] == true && arrKeyPressedLast[USB_ENTER] == false) {
     arrKeyPressedLast[USB_ENTER] = true;
     if (snakeGameState == SNAKE_GAME_STATE_END) {
       snakeGameState = SNAKE_GAME_STATE_INIT;
     }
-    paused = false;
+    if (snakeGameState == SNAKE_GAME_STATE_PAUSED) {
+      snakeGameState = SNAKE_GAME_STATE_RUNNING;
+    }
   }
   if (arrKeyPressed[USB_SPACE] == true && arrKeyPressedLast[USB_SPACE] == false) {
     arrKeyPressedLast[USB_SPACE] = true;
-    paused = !paused;
+    if (snakeGameState == SNAKE_GAME_STATE_RUNNING) {
+      snakeGameState = SNAKE_GAME_STATE_PAUSED;
+      snakeCheckPaused(snakeGameState);
+    } 
+    else if (snakeGameState == SNAKE_GAME_STATE_PAUSED){
+      snakeGameState = SNAKE_GAME_STATE_RUNNING;
+      snakeCheckPaused(snakeGameState);
+    }
+  }
+
+  if (snakeGameState == SNAKE_GAME_STATE_PAUSED) return;
+
+  //update snake direction not allowing 180° turn
+  if (arrKeyPressed[USB_ARROWUP] == true && arrKeyPressedLast[USB_ARROWUP] == false) {
+    arrKeyPressedLast[USB_ARROWUP] = true;
+    if (snakeGameState == SNAKE_GAME_STATE_RUNNING && snakeUserDirection != SNAKE_DIRECTION_DOWN) {
+      snakeUserDirectionBuffer = SNAKE_DIRECTION_UP;
+    }
+  } else   if (arrKeyPressed[USB_ARROWDOWN] == true && arrKeyPressedLast[USB_ARROWDOWN] == false) {
+    arrKeyPressedLast[USB_ARROWUP] = true;
+    if (snakeGameState == SNAKE_GAME_STATE_RUNNING && snakeUserDirection != SNAKE_DIRECTION_UP) {
+      snakeUserDirectionBuffer = SNAKE_DIRECTION_DOWN;
+    }
+  } else   if (arrKeyPressed[USB_ARROWRIGHT] == true && arrKeyPressedLast[USB_ARROWRIGHT] == false) {
+    arrKeyPressedLast[USB_ARROWRIGHT] = true;
+    if (snakeGameState == SNAKE_GAME_STATE_RUNNING && snakeUserDirection != SNAKE_DIRECTION_LEFT) {
+      snakeUserDirectionBuffer = SNAKE_DIRECTION_RIGHT;
+    }
+  } else   if (arrKeyPressed[USB_ARROWLEFT] == true && arrKeyPressedLast[USB_ARROWLEFT] == false) {
+    arrKeyPressedLast[USB_ARROWLEFT] = true;
+    if (snakeGameState == SNAKE_GAME_STATE_RUNNING && snakeUserDirection != SNAKE_DIRECTION_RIGHT) {
+      snakeUserDirectionBuffer = SNAKE_DIRECTION_LEFT;
+    }
   }
 }
 
@@ -341,4 +354,16 @@ void snakeDraw(int x, int y, byte type)
     //XYscope.plotRectangle(x1, y1, x2, y2);
     //XYscope.plotRectangle(x1 + 30, y1 + 30, x2 - 30, y2 - 30);
   }
+}
+
+void snakeCheckPaused(byte gameState)
+{
+  static int snakePointerSnake;
+  if (gameState != SNAKE_GAME_STATE_PAUSED) {
+    XYscope.XYlistEnd = snakePointerSnake;
+    return;
+  }
+  snakePointerSnake = XYscope.XYlistEnd;
+  XYscope.printSetup(2300, 3600, 400); //X;Y;Size
+  XYscope.print((char *)"PAUSED");
 }

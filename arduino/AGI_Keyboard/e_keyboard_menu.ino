@@ -11,7 +11,7 @@ void KeyboardMenu() {
     /*5*/    "Clock",
     /*6*/    "Starfield",
     /*7*/    "10Print",
-    /*8*/    //    "new",
+    /*8*/    "3D Terrain",
     /*9*/    //    "new",
     /*10*/   //    "new",
   };
@@ -158,7 +158,7 @@ void KeyboardMenu() {
           /*4*/          breakoutGame();
           break;
         case 5:
-          /*5*/          Clock();
+          /*5*/          ClockUSB();
           break;
         case 6:
           /*6*/          StarfieldUSB();
@@ -167,10 +167,10 @@ void KeyboardMenu() {
           /*7*/          TenPrintUSB();
           break;
         case 8:
-          /*8*/
+          /*8*/          Terrain();
           break;
         case 9:
-          /*9*/
+          /*9*/          
           break;
         default:
           ;

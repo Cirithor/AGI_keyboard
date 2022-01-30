@@ -25,13 +25,13 @@ int TetrisLevelSelection() {
     }
   }
   //print info
-   XYscope.printSetup(100, 600, 170); //X;Y;Size
-   XYscope.print((char *)"ARROW KEYS - MOVE");
-   XYscope.printSetup(100, 350, 170); //X;Y;Size
-   XYscope.print((char *)"ESC        - EXIT");
-   XYscope.printSetup(100, 100, 170); //X;Y;Size
-   XYscope.print((char *)"SPACE      - PAUSE");
-   
+  XYscope.printSetup(100, 600, 170); //X;Y;Size
+  XYscope.print((char *)"ARROW KEYS - MOVE");
+  XYscope.printSetup(100, 350, 170); //X;Y;Size
+  XYscope.print((char *)"ESC        - EXIT");
+  XYscope.printSetup(100, 100, 170); //X;Y;Size
+  XYscope.print((char *)"SPACE      - PAUSE");
+
   int drawPointer = XYscope.XYlistEnd;
   //draw first selection square
   int gridPos = 0;
@@ -99,6 +99,7 @@ int TetrisLevelSelection() {
   }
 }
 
+int tetrisNote;
 void Tetris() {
 
   // Pieces definition
@@ -502,6 +503,7 @@ void Tetris() {
     XYscope.XYlistEnd = drawPointer [0];
     level = TetrisLevelSelection();
     if (level < 0) return;
+    tetrisNote = 0;
     XYscope.XYlistEnd = drawPointer [0];
     while (true) {
       while (true) {
@@ -798,6 +800,7 @@ void Tetris() {
           }
           break;
         }
+        tetrisMusic();
       }
 
 
@@ -1000,4 +1003,49 @@ void Tetris() {
       }
     } //main loop
   } //level selection loop
+}
+
+void tetrisMusic()
+{
+  static unsigned long duration;
+  //static int note;
+  static unsigned long startTime;
+  float BPM = 180;
+  const int notes = 59 * 2; //number of notes in array times 2
+
+  float lead_notes[] = {
+    // part 1
+    _E5, _B4, _C5, _D5, _C5, _B4, _A4, _A4, _C5, _E5, _D5, _C5, _B4, _B4, _C5, _D5, _E5, _C5, _A4, _A4, _R,
+    _D5, _F5, _A5, _G5, _F5, _E5, _C5, _E5, _D5, _C5, _B4, _B4, _C5, _D5, _E5, _C5, _A4, _A4, _R,
+
+    // part 2
+    _E4, _C4, _D4, _B3, _C4, _A3, _GS3, _B3,
+    _E4, _C4, _D4, _B3, _C4, _E4, _A4, _A4, _GS4, _R
+
+  };
+  float lead_times[] = {
+    // part 1
+    1.0, 0.5, 0.5, 1.0, 0.5, 0.5, 1.0, 0.5, 0.5, 1.0, 0.5, 0.5, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+    1.5, 0.5, 1.0, 0.5, 0.5, 1.5, 0.5, 1.0, 0.5, 0.5, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+
+    // part 2
+    2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0,
+    2.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0
+  };
+  if (startTime + duration < millis()) {
+    //after every note an 8 millisecond delay
+    if (tetrisNote % 2 == 1) {
+      noTone(13);
+      duration = 8;
+      startTime = millis();
+    } else {
+      duration = lead_times[tetrisNote / 2] * 1000 / (BPM / 60);
+      Serial.println(duration);
+      startTime = millis();
+      tone(13, lead_notes[tetrisNote / 2], duration);
+      //Serial.println(note);
+    }
+    tetrisNote++;
+    if (tetrisNote >= notes * 2) tetrisNote = 0;
+  }
 }
